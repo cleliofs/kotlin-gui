@@ -1,8 +1,8 @@
 package typeahead
 
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
-import kotlin.test.assertEquals
 
 data class NGram(val words: String, val freq: Int = -1) : Comparable<NGram> {
     override fun compareTo(other: NGram): Int {
@@ -26,8 +26,8 @@ fun NavigableSet<NGram>.complete(input: String): List<String> {
     // ]
 
     val canonicalisedInput = input.toLowerCase()
-    val seq = sequenceOf(canonicalisedInput.lastIndex + 1 downTo 0).map {
-        canonicalisedInput.substring(0, it) to canonicalisedInput.substring(it)
+    val seq = sequenceOf(canonicalisedInput.lastIndex + 1 downTo 0).map { intProgression ->
+        intProgression.first.let { canonicalisedInput.substring(0, it) to canonicalisedInput.substring(it) }
     }
     fun NavigableSet<NGram>.query(s: String) = tailSet(NGram(s)).headSet(NGram(s + Char.MAX_SURROGATE))
     val queried = seq.map { query(it.first) to it.second }
@@ -43,14 +43,14 @@ fun NavigableSet<NGram>.complete(input: String): List<String> {
     val matches = queried.dropWhile { it.first.isEmpty() }
     val (candidates, remaining) = matches.first()
 
-    val charPairs = if (remaining.length() == 1) listOf(remaining) else remaining.pairwise()
-    val prefix = input.substring(0, input.length() - remaining.length())
+    val charPairs = if (remaining.length == 1) listOf(remaining) else remaining.pairwise()
+    val prefix = input.substring(0, input.length - remaining.length)
 
     return candidates.filter { c ->
-        val postfix = c.words.substring(prefix.length())
+        val postfix = c.words.substring(prefix.length)
         charPairs.map { pair ->
             when {
-                pair.length() == 1 -> postfix.contains(pair)
+                pair.length == 1 -> postfix.contains(pair)
                 else -> postfix.indexOf(pair[0]).let { it > 0 && it < postfix.lastIndexOf(pair[1]) }
             }
         }.all { it }

@@ -8,7 +8,7 @@ import javafx.scene.control.ListView
 import javafx.scene.control.TextField
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
-import nl.komponents.kovenant.async
+import nl.komponents.kovenant.*
 import nl.komponents.kovenant.jfx.configureKovenant
 import nl.komponents.kovenant.ui.successUi
 import org.reactfx.EventStreams
@@ -17,8 +17,7 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.Executors
-import kotlin.concurrent.currentThread
-import kotlin.util.measureTimeMillis
+import kotlin.system.measureTimeMillis
 
 val thread = Executors.newSingleThreadExecutor()
 
@@ -47,7 +46,7 @@ class App : Application() {
         completionsList.itemsProperty().bind(lastResult)
 
         val guard = edits.suspend()
-        async {
+        task {
             load()
         } successUi {
             guard.close()
@@ -63,12 +62,12 @@ class App : Application() {
         val path = Paths.get("words.txt")
         val t = measureTimeMillis {
             Files.lines(path).parallel().forEach { line ->
-                val words = line.substringAfter('\t').replace('\t', ' ').toLowerCase()
+                val words = line.substringAfterLast('\t').replace('\t', ' ').toLowerCase()
                 val freq = line.substringBefore('\t').toInt()
                 ngrams.add(NGram(words, freq))
             }
         }
-        println("$currentThread: Loaded file in $t msec")
+        println("Loaded file in $t msec")
     }
 }
 
